@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\api\auth;
 
+use App\Models\PhoneVerifiey;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class ApiAuthUserController extends Controller
@@ -42,6 +44,7 @@ class ApiAuthUserController extends Controller
 
             return response()->json([
                 'status' => true,
+                'user' => $user,
                 'message' => 'کاربر با موفقیت نام نویسی شد',
                 'token' => $user->createToken("userApiToken")->plainTextToken
             ], 200);
@@ -91,6 +94,7 @@ class ApiAuthUserController extends Controller
 
             return response()->json([
                 'status' => true,
+                'user' => $user,
                 'message' => 'User Logged In Successfully',
                 'token' => $user->createToken("userApiToken")->plainTextToken
             ], 200);
@@ -103,4 +107,121 @@ class ApiAuthUserController extends Controller
         }
     }
 
+    public function validationCodePhoneNumberCode(Request $request)
+    {
+        $user = $request->user();
+        $code = $request->code;
+
+        $resultPhone = PhoneVerifiey::where('token', $code)->first();
+        if ($resultPhone) {
+            if ($resultPhone->expire_time > time()) {
+
+                $user->phone_verified_at = time();
+                $user->save();
+                PhoneVerifiey::destroy(
+                    PhoneVerifiey::where('token', $code)->first()->id);
+                return response()->json([
+                    'status' => true,
+                    'message' => "شماره شما با موفقیت تایید شد ",
+                ]);
+
+
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => "کد وارد شده منقضی شده است   ",
+                ]);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "کد وارد شده اشتباه است  ",
+            ]);
+        }
+
+
+    }
+
+    public function generateValidationCodePhoneNumberSendSMS(Request $request)
+    {
+        $user = $request->user();
+        $result = PhoneVerifiey::where('user_id', $user->id)->first();
+        if (!$user->phone_verified_at) {
+            if ($result) {
+                if ($result->expire_time > time()) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "کد قبلا برای شما فرستاده شده است "
+                    ]);
+                } else {
+                    //delete the previews code from the database
+                    PhoneVerifiey::destroy($result->id);
+                    //code expired send it again
+                    $result_sms = $this->sendingValidationSMSCode($user);
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => "کد برای شما ارسال شد ",
+                        'sms' => $result_sms
+                    ]);
+                }
+            } else {
+                //send the code for the first time is not in the database
+                $result_sms = $this->sendingValidationSMSCode($user);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => "کد برای شما ارسال شد ",
+                    'sms' => $result_sms
+                ]);
+            }
+        } else {
+            return response()->json([
+                'status' => true,
+                'message' => "این شماره قبلا تایید شده است  "
+            ]);
+        }
+    }
+
+    private function sendingValidationSMSCode($user)
+    {
+
+        $validation_code = rand(111111, 999999);
+        //add to the table for validation
+
+
+        $message = "code:$validation_code" . "\n" . "کد تایید ارسال شده شما تا 5 دقیقه معتبر است \n دانیال تیوب";
+
+        //using sms.ir as sms api
+        /*
+                $responseApiToken=Http::asForm()->withHeaders([
+                    'Content-Type'=>'application/x-www-form-urlencoded'
+                ])->post(env('SMS_IR_GET_TOKEN_SMS_URL'),[
+                        'UserApiKey'=>env('SMS_IR_USER_API_KEY'),
+                    'SecretKey'=>env('SMS_IR_KEY'),
+                ]);
+
+                if($responseApiToken->successful()){
+                    $response=Http::asForm()->withHeaders([
+                        'Content-Type'=>'application/x-www-form-urlencoded',
+                        'x-sms-ir-secure-token'=>$responseApiToken['TokenKey'],
+                    ])->post(env('SMS_IR_SEND_SMS_URL'),[
+                        'Messages'=>$message,
+                        'MobileNumbers'=>"09216059177",
+                        'LineNumber'=>'30006822885772',
+                        'SendDateTime'=>'',
+                    ]);
+                    return $response;
+                }
+        */
+
+        $responseApiToken = $user->phone_validation()->create([
+            'token' => $validation_code,
+            'start_time' => time(),
+            'expire_time' => time() + 500
+        ]);
+
+
+        return $responseApiToken;
+    }
 }
