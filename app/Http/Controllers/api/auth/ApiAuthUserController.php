@@ -65,21 +65,20 @@ class ApiAuthUserController extends Controller
             //validate
             $validateUser = Validator::make($request->all(),
                 [
-                    'email' => 'email',
+                    'emailOrPhone' => 'required',
                     'password' => 'required'
                 ]);
 
             if ($validateUser->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'validation error',
                     'errors' => $validateUser->errors()
                 ], 401);
             }
 
             //login with phone number or email
-            if (!Auth::attempt($request->only(['phone_number', 'password']))) {
-                if (!Auth::attempt($request->only(['email', 'password']))) {
+            if (!Auth::attempt(['phone_number'=>$request->emailOrPhone,'password'=>$request->password])) {
+                if (!Auth::attempt(['email'=>$request->emailOrPhone,'password'=>$request->password])) {
                     return response()->json([
                         'status' => false,
                         'message' => 'نام کاربری یا رمزعبور اشتباه است',
@@ -87,9 +86,9 @@ class ApiAuthUserController extends Controller
                 }
             }
 
-            $user = User::where('phone_number', $request->phone_number)->first();
+            $user = User::where('phone_number', $request->emailOrPhone)->first();
             if (!$user) {
-                $user = User::where('email', $request->email)->first();
+                $user = User::where('email', $request->emailOrPhone)->first();
             }
 
             return response()->json([
