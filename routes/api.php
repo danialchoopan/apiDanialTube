@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user1',function (Request $request){
     return $request->user();
 });
 Route::middleware('auth:sanctum')->post('/user/phone/code', [ApiAuthUserController::class, 'validationCodePhoneNumberCode']);
+Route::middleware('auth:sanctum')->post('/user/phone/valid', [ApiAuthUserController::class, 'checkPhoneValidation']);
 
 
 //no token requests

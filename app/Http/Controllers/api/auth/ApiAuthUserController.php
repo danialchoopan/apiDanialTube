@@ -42,6 +42,8 @@ class ApiAuthUserController extends Controller
             $user->password = Hash::make($request->password);
             $user->save();
 
+            $user = User::where('email', $request->email)->first();
+
             return response()->json([
                 'status' => true,
                 'user' => $user,
@@ -139,6 +141,21 @@ class ApiAuthUserController extends Controller
         }
 
 
+    }
+
+    public function checkPhoneValidation(Request $request)
+    {
+        $user = $request->user();
+        $result = PhoneVerifiey::where('user_id', $user->id)->first();
+        if ($user->phone_verified_at) {
+            return response()->json([
+                'status' => false,
+            ]);
+        }else{
+            return response()->json([
+                'status' => false,
+            ]);
+        }
     }
 
     public function generateValidationCodePhoneNumberSendSMS(Request $request)
