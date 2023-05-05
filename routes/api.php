@@ -16,14 +16,22 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-//user auth protected requests
-
-Route::middleware('auth:sanctum')->get('/user', [ApiAuthUserController::class, 'generateValidationCodePhoneNumberSendSMS']);
-Route::middleware('auth:sanctum')->get('/user1',function (Request $request){
+//token protected requests
+Route::middleware('auth:sanctum')->get('/test/token', function (Request $request) {
     return $request->user();
 });
-Route::middleware('auth:sanctum')->post('/user/phone/code', [ApiAuthUserController::class, 'validationCodePhoneNumberCode']);
-Route::middleware('auth:sanctum')->post('/user/phone/valid', [ApiAuthUserController::class, 'checkPhoneValidation']);
+
+Route::group(['middleware' => ['auth:sanctum']], function () {
+
+    //user auth protected requests
+    Route::get('/user/phone/send/valid', [ApiAuthUserController::class, 'generateValidationCodePhoneNumberSendSMS']);
+    Route::post('/user/phone/code', [ApiAuthUserController::class, 'validationCodePhoneNumberCode']);
+    Route::post('/user/phone/check/valid', [ApiAuthUserController::class, 'checkPhoneValidation']);
+    Route::post('/auth/logout', [ApiAuthUserController::class, 'logout']);
+    //user end
+
+
+});
 
 
 //no token requests
@@ -45,3 +53,20 @@ Route::get('/homeWithNoAuth', function () {
     $homePage['allCoursesWithVideosPopular'] = $allCoursesWithVideosPopular;
     return $homePage;
 });
+
+
+//course
+Route::get('/course/show/{id}', function (Request $request, $id) {
+    $courseShow = \App\Models\Course::with('videos', 'user')->find($id);
+    if ($courseShow) {
+        return [
+            'success' => true,
+            'courseWithVideosUser' => $courseShow
+        ];
+    } else {
+        return [
+            'success' => false
+        ];
+    }
+});
+//end course

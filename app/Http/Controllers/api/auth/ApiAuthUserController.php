@@ -108,6 +108,15 @@ class ApiAuthUserController extends Controller
         }
     }
 
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        return [
+            'tokens'=>$request->user()->tokens()->delete(),
+            'message '=> 'شما با موفقیت از حساب کاربری خارج شده اید '
+        ];
+    }
+
     public function validationCodePhoneNumberCode(Request $request)
     {
         $user = $request->user();
