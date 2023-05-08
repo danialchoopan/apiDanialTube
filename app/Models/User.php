@@ -47,4 +47,14 @@ class User extends \TCG\Voyager\Models\User
     {
         return $this->hasMany(PhoneVerifiey::class,'user_id');
     }
+
+    public function courseFavourite()
+    {
+        return $this->hasMany(CourseFavourite::class);
+    }
+
+    public function courseTransaction()
+    {
+        return $this->hasMany(CourseTransaction::class);
+    }
 }
