@@ -32,16 +32,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //user profile
 
-    Route::post('/user/profile/course/favorites',function (Request $request){
-        $courseFavorites=$request->user()->courseFavourite()
-            ->with("user","course","course.videos", "course.user","course.sub_course_categories")->get();
+    Route::post('/user/profile/course/favorites', function (Request $request) {
+        $courseFavorites = $request->user()->courseFavourite()
+            ->with("user", "course", "course.videos", "course.user", "course.sub_course_categories")->get();
 
         return $courseFavorites;
     });
 
-    Route::post('/user/profile/course/transaction',function (Request $request){
-        $courseTransaction=$request->user()->courseTransaction()
-            ->with("user","course","course.videos", "course.user","course.sub_course_categories")->get();
+    Route::post('/user/profile/course/transaction', function (Request $request) {
+        $courseTransaction = $request->user()->courseTransaction()
+            ->with("user", "course", "course.videos", "course.user", "course.sub_course_categories")->get();
         return $courseTransaction;
     });
 
@@ -60,9 +60,9 @@ Route::get('/homeWithNoAuth', function () {
     $homePage = [];
     $homePageSlider = \App\Models\Slider::all();
     $coursesCategory = \App\Models\CourseCategory::all();
-    $allCoursesWithTeacherBestSelling = \App\Models\Course::with('videos', 'user','sub_course_categories')->get();
-    $CoursesWithTeacherMostPopular = \App\Models\Course::with('videos', 'user','sub_course_categories')->first();
-    $allCoursesWithVideosPopular = \App\Models\Course::with('videos', 'user','sub_course_categories')->get();
+    $allCoursesWithTeacherBestSelling = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
+    $CoursesWithTeacherMostPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->first();
+    $allCoursesWithVideosPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
     $homePage['homePageSlider'] = $homePageSlider;
     $homePage['coursesCategory'] = $coursesCategory;
     $homePage['allCoursesWithTeacherBestSelling'] = $allCoursesWithTeacherBestSelling;
@@ -107,3 +107,50 @@ Route::get('/course/search/{courseName}', function (Request $request, $courseNam
 
 
 //end course
+
+
+//category
+Route::get('/course/categories', function (Request $request) {
+    $categoris = \App\Models\CourseCategory::all();
+    if ($categoris) {
+        return [
+            'courseCategories' => $categoris
+        ];
+    } else {
+        return [
+            'success' => false
+        ];
+    }
+});
+
+
+Route::get('/course/sub/categories/{category_id}', function (Request $request, $category_id) {
+    $categoris = \App\Models\CourseCategory::find($category_id)->subCategory()->get();
+
+    if ($categoris) {
+        return [
+            'subCourseCategories' => $categoris
+        ];
+    } else {
+        return [
+            'success' => false
+        ];
+    }
+});
+
+Route::get('/course/sub/category/courses/{sub_category_id}', function (Request $request, $sub_category_id) {
+    $subCategoryCourses = \App\Models\SubCourseCategory::find($sub_category_id)->courses()
+        ->with('videos', 'user', 'sub_course_categories')
+        ->get();
+
+    if ($subCategoryCourses) {
+        return [
+            'subCourseCategoriesCourses' => $subCategoryCourses
+        ];
+    } else {
+        return [
+            'success' => false
+        ];
+    }
+});
+//end category
