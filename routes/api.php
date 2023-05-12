@@ -30,7 +30,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/auth/logout', [ApiAuthUserController::class, 'logout']);
     //user auth end
 
-    //user profile
+    //user profile courses
 
     Route::post('/user/profile/course/favorites', function (Request $request) {
         $courseFavorites = $request->user()->courseFavourite()
@@ -45,8 +45,26 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         return $courseTransaction;
     });
 
-    //end user profile
+    //end user profile courses
 
+    //add favorite course
+
+    Route::post('/user/add/course/favorite/{course_id}', function (Request $request, $course_id) {
+        $courseFavorite = $request->user()->courseFavourite()->create([
+            'course_id' => $course_id,
+            'token' => time()+rand(11,99)-7325
+        ]);
+        return $courseFavorite;
+    });
+
+    //remove favorite course
+
+    Route::post('/user/remove/course/favorite/{course_id}', function (Request $request, $course_id) {
+        $courseFavorite = \App\Models\CourseFavourite::where('course_id',$course_id)->delete();
+        return $courseFavorite;
+    });
+
+    //end favorites course
 
 });
 
@@ -56,13 +74,28 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 Route::post('/auth/register', [ApiAuthUserController::class, 'createUser']);
 Route::post('/auth/login', [ApiAuthUserController::class, 'loginUser']);
 
+//home page
+
+//all
 Route::get('/homeWithNoAuth', function () {
     $homePage = [];
     $homePageSlider = \App\Models\Slider::all();
     $coursesCategory = \App\Models\CourseCategory::all();
-    $allCoursesWithTeacherBestSelling = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
-    $CoursesWithTeacherMostPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->first();
-    $allCoursesWithVideosPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
+
+    $allCoursesWithTeacherBestSelling =
+        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
+            ->take(4)
+            ->get();
+
+    $CoursesWithTeacherMostPopular =
+        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
+            ->first();
+
+    $allCoursesWithVideosPopular =
+        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
+            ->take(4)
+            ->get();
+
     $homePage['homePageSlider'] = $homePageSlider;
     $homePage['coursesCategory'] = $coursesCategory;
     $homePage['allCoursesWithTeacherBestSelling'] = $allCoursesWithTeacherBestSelling;
@@ -70,6 +103,21 @@ Route::get('/homeWithNoAuth', function () {
     $homePage['allCoursesWithVideosPopular'] = $allCoursesWithVideosPopular;
     return $homePage;
 });
+
+//show more best-selling
+Route::get('/homeWithNoAuth/showMoreBestselling', function () {
+    $allCoursesWithTeacherBestSelling = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
+    return $allCoursesWithTeacherBestSelling;
+});
+
+//show more most-populars
+Route::get('/homeWithNoAuth/showMoreMostPopulars', function () {
+    $allCoursesWithVideosPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
+    return $allCoursesWithVideosPopular;
+});
+
+
+//end home page
 
 
 //course
