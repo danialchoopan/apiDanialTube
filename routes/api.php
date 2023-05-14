@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\api\auth\ApiAuthUserController;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,10 +26,15 @@ Route::middleware('auth:sanctum')->get('/test/token', function (Request $request
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //user auth protected requests
-    Route::get('/user/phone/send/valid', [ApiAuthUserController::class, 'generateValidationCodePhoneNumberSendSMS']);
+
+    Route::post('/user/phone/send/valid', [ApiAuthUserController::class, 'generateValidationCodePhoneNumberSendSMS']);
+
     Route::post('/user/phone/code', [ApiAuthUserController::class, 'validationCodePhoneNumberCode']);
+
     Route::post('/user/phone/check/valid', [ApiAuthUserController::class, 'checkPhoneValidation']);
+
     Route::post('/auth/logout', [ApiAuthUserController::class, 'logout']);
+
     //user auth end
 
     //user profile courses
@@ -52,7 +59,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/user/add/course/favorite/{course_id}', function (Request $request, $course_id) {
         $courseFavorite = $request->user()->courseFavourite()->create([
             'course_id' => $course_id,
-            'token' => time()+rand(11,99)-7325
+            'token' => time() + rand(11, 99) - 7325
         ]);
         return $courseFavorite;
     });
@@ -60,11 +67,35 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //remove favorite course
 
     Route::post('/user/remove/course/favorite/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = \App\Models\CourseFavourite::where('course_id',$course_id)->delete();
+        $courseFavorite = \App\Models\CourseFavourite::where('course_id', $course_id)->delete();
         return $courseFavorite;
     });
 
     //end favorites course
+
+    //user edit
+    Route::post('/user/edit/password/email', function (Request $request) {
+
+        $user = User::find($request->user()->id);
+        if ($user->password == Hash::check($request->oldPassword, $user->password)) {
+            if ($request->email != "") {
+                $user->email = $request->email;
+            }
+            if ($request->name != "") {
+                $user->name = $request->m_name;
+            }
+            $user->password = Hash::make($request->newPassword);
+            $user->save();
+            return $user;
+        } else {
+            return [
+                'message' => "رمزعبور فعلی اشتباه است!"
+            ];
+        }
+
+    });
+    //end user edit
+
 
 });
 
@@ -116,6 +147,14 @@ Route::get('/homeWithNoAuth/showMoreMostPopulars', function () {
     return $allCoursesWithVideosPopular;
 });
 
+//show related
+Route::get('/courses/more', function () {
+    $coursesMore =
+        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
+            ->take(4)
+            ->get();
+    return $coursesMore;
+});
 
 //end home page
 

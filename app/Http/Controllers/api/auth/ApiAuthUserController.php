@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api\auth;
 
 use App\Models\PhoneVerifiey;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -125,8 +126,8 @@ class ApiAuthUserController extends Controller
         $resultPhone = PhoneVerifiey::where('token', $code)->first();
         if ($resultPhone) {
             if ($resultPhone->expire_time > time()) {
-
-                $user->phone_verified_at = time();
+                $user->phone_verified_at =
+                    Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s');
                 $user->save();
                 PhoneVerifiey::destroy(
                     PhoneVerifiey::where('token', $code)->first()->id);
@@ -158,7 +159,7 @@ class ApiAuthUserController extends Controller
         $result = PhoneVerifiey::where('user_id', $user->id)->first();
         if ($user->phone_verified_at) {
             return response()->json([
-                'status' => false,
+                'status' => true,
             ]);
         }else{
             return response()->json([
@@ -203,7 +204,9 @@ class ApiAuthUserController extends Controller
         } else {
             return response()->json([
                 'status' => true,
-                'message' => "این شماره قبلا تایید شده است  "
+                'message' => "این شماره قبلا تایید شده است  ",
+                'sms'=>""
+
             ]);
         }
     }
