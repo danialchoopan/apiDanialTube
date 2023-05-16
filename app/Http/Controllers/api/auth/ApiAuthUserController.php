@@ -118,6 +118,8 @@ class ApiAuthUserController extends Controller
         ];
     }
 
+    //phone validation
+
     public function validationCodePhoneNumberCode(Request $request)
     {
         $user = $request->user();
@@ -246,7 +248,7 @@ class ApiAuthUserController extends Controller
         $responseApiToken = $user->phone_validation()->create([
             'token' => $validation_code,
             'start_time' => time(),
-            'expire_time' => time() + 500
+            'expire_time' => strtotime("+2 minutes")
         ]);
 
 

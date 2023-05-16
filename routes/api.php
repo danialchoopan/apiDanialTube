@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->get('/test/token', function (Request $request
     return $request->user();
 });
 
+Route::get("internet", function () {
+    return "ok";
+});
+
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //user auth protected requests
@@ -54,6 +58,20 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //end user profile courses
 
+    //check if the course is favorite
+    Route::post('/user/check/course/favorite/{course_id}', function (Request $request, $course_id) {
+        $courseFavorite = $request->user()->courseFavourite()->where('course_id', $course_id)->get();
+        if (count($courseFavorite) != 0) {
+            return [
+                'status' => true,
+            ];
+        } else {
+            return [
+                'status' => false
+            ];
+        }
+    });
+
     //add favorite course
 
     Route::post('/user/add/course/favorite/{course_id}', function (Request $request, $course_id) {
@@ -67,9 +85,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //remove favorite course
 
     Route::post('/user/remove/course/favorite/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = \App\Models\CourseFavourite::where('course_id', $course_id)->delete();
+        $courseFavorite = $request->user()->courseFavourite()->where('course_id', $course_id)->delete();
         return $courseFavorite;
     });
+
 
     //end favorites course
 
