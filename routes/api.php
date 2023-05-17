@@ -23,13 +23,13 @@ Route::middleware('auth:sanctum')->get('/test/token', function (Request $request
     return $request->user();
 });
 
-Route::get("internet", function () {
+Route::get("/internet", function () {
     return "ok";
 });
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
-    //user auth protected requests
+    //user phone verify requests
 
     Route::post('/user/phone/send/valid', [ApiAuthUserController::class, 'generateValidationCodePhoneNumberSendSMS']);
 
@@ -39,7 +39,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('/auth/logout', [ApiAuthUserController::class, 'logout']);
 
-    //user auth end
+    //end user phone verify requests
 
     //user profile courses
 
@@ -115,11 +115,21 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
     //end user edit
 
+    //user rest password
+    Route::post('/user/rest/change/password', [ApiAuthUserController::class,'userRestPasswordChangePassword']);
 
 });
 
-
 //no token requests
+
+//user reset request
+Route::post('/user/rest/password', [ApiAuthUserController::class,'userRestPasswordCheckPhone']);
+
+Route::post('/user/rest/password/request/sms', [ApiAuthUserController::class,'userRestPasswordRequestSms']);
+
+Route::post('/user/rest/password/send/sms',[ApiAuthUserController::class,'userRestPasswordSendSms']);
+//end user reset request
+
 
 Route::post('/auth/register', [ApiAuthUserController::class, 'createUser']);
 Route::post('/auth/login', [ApiAuthUserController::class, 'loginUser']);
@@ -260,3 +270,6 @@ Route::get('/course/sub/category/courses/{sub_category_id}', function (Request $
     }
 });
 //end category
+
+
+

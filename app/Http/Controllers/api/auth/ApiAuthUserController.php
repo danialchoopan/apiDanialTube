@@ -80,8 +80,8 @@ class ApiAuthUserController extends Controller
             }
 
             //login with phone number or email
-            if (!Auth::attempt(['phone_number'=>$request->emailOrPhone,'password'=>$request->password])) {
-                if (!Auth::attempt(['email'=>$request->emailOrPhone,'password'=>$request->password])) {
+            if (!Auth::attempt(['phone_number' => $request->emailOrPhone, 'password' => $request->password])) {
+                if (!Auth::attempt(['email' => $request->emailOrPhone, 'password' => $request->password])) {
                     return response()->json([
                         'status' => false,
                         'message' => 'نام کاربری یا رمزعبور اشتباه است',
@@ -113,8 +113,8 @@ class ApiAuthUserController extends Controller
     {
         $request->user()->tokens()->delete();
         return [
-            'tokens'=>$request->user()->tokens()->delete(),
-            'message '=> 'شما با موفقیت از حساب کاربری خارج شده اید '
+            'tokens' => $request->user()->tokens()->delete(),
+            'message ' => 'شما با موفقیت از حساب کاربری خارج شده اید '
         ];
     }
 
@@ -163,7 +163,7 @@ class ApiAuthUserController extends Controller
             return response()->json([
                 'status' => true,
             ]);
-        }else{
+        } else {
             return response()->json([
                 'status' => false,
             ]);
@@ -207,10 +207,101 @@ class ApiAuthUserController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => "این شماره قبلا تایید شده است  ",
-                'sms'=>""
+                'sms' => ""
 
             ]);
         }
+    }
+
+    //rest password
+    public function userRestPasswordCheckPhone(Request $request)
+    {
+        $user = \App\Models\User::where("phone_number", $request->phone_number)->first();
+        if ($user) {
+            return [
+                "user" => $user,
+                "status" => true
+            ];
+        } else {
+            return [
+                "status" => false
+            ];
+        }
+    }
+
+    public function userRestPasswordRequestSms(Request $request)
+    {
+        $user = User::where("phone_number", $request->phone_number)->first();
+        $phoneVerifiey = PhoneVerifiey::where('user_id', $user->id)->first();
+        if ($phoneVerifiey) {
+            if ($phoneVerifiey->expire_time > time()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "کد قبلا برای شما فرستاده شده است "
+                ]);
+            } else {
+                //delete the previews code from the database
+                PhoneVerifiey::destroy($phoneVerifiey->id);
+                //code expired send it again
+                $result_sms = $this->sendingValidationSMSCode($user);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => "کد برای شما ارسال شد ",
+                    'sms' => $result_sms
+                ]);
+            }
+        } else {
+            //send the code for the first time is not in the database
+            $result_sms = $this->sendingValidationSMSCode($user);
+
+            return response()->json([
+                'status' => true,
+                'message' => "کد برای شما ارسال شد ",
+                'sms' => $result_sms
+            ]);
+        }
+
+    }
+
+    public function userRestPasswordSendSms(Request $request)
+    {
+        $user = User::where("phone_number", $request->phone_number)->first();
+        $code = $request->code;
+        $resultPhone = PhoneVerifiey::where('token', $code)->first();
+        if ($resultPhone) {
+            if ($resultPhone->expire_time > time()) {
+                PhoneVerifiey::destroy(
+                    PhoneVerifiey::where('token', $code)->first()->id);
+                return response()->json([
+                    'status' => true,
+                    'message' => "شماره شما با موفقیت تایید شد ",
+                    'user_token'=>$user->createToken("userApiToken")->plainTextToken
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => "کد وارد شده منقضی شده است   ",
+                ]);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "کد وارد شده اشتباه است  ",
+            ]);
+        }
+
+    }
+
+    public function userRestPasswordChangePassword(Request $request)
+    {
+        $user = $request->user();
+        $user->password = Hash::make($request->newPassword);
+        $user->save();
+        return [
+            'user'=>$user,
+            'message'=>'رمزعبور شما با موفقیت بازگشایی شد'
+        ];
     }
 
     private function sendingValidationSMSCode($user)
@@ -220,29 +311,27 @@ class ApiAuthUserController extends Controller
         //add to the table for validation
 
 
-        $message = "code:$validation_code" . "\n" . "کد تایید ارسال شده شما تا 5 دقیقه معتبر است \n دانیال تیوب";
-
-        //using sms.ir as sms api
+        $message = "code:$validation_code" . "\n" . "کد تایید ارسال شده شما تا 2 دقیقه معتبر است \n دانیال تیوب";
         /*
-                $responseApiToken=Http::asForm()->withHeaders([
-                    'Content-Type'=>'application/x-www-form-urlencoded'
-                ])->post(env('SMS_IR_GET_TOKEN_SMS_URL'),[
-                        'UserApiKey'=>env('SMS_IR_USER_API_KEY'),
-                    'SecretKey'=>env('SMS_IR_KEY'),
-                ]);
+        //using sms.ir as sms api
+        $responseApiToken = Http::asForm()->withHeaders([
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ])->post(env('SMS_IR_GET_TOKEN_SMS_URL'), [
+            'UserApiKey' => env('SMS_IR_USER_API_KEY'),
+            'SecretKey' => env('SMS_IR_KEY'),
+        ]);
 
-                if($responseApiToken->successful()){
-                    $response=Http::asForm()->withHeaders([
-                        'Content-Type'=>'application/x-www-form-urlencoded',
-                        'x-sms-ir-secure-token'=>$responseApiToken['TokenKey'],
-                    ])->post(env('SMS_IR_SEND_SMS_URL'),[
-                        'Messages'=>$message,
-                        'MobileNumbers'=>"09216059177",
-                        'LineNumber'=>'30006822885772',
-                        'SendDateTime'=>'',
-                    ]);
-                    return $response;
-                }
+        if ($responseApiToken->successful()) {
+            $response = Http::asForm()->withHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'x-sms-ir-secure-token' => $responseApiToken['TokenKey'],
+            ])->post(env('SMS_IR_SEND_SMS_URL'), [
+                'Messages' => $message,
+                'MobileNumbers' => "09216059177",
+                'LineNumber' => '30006822885772',
+                'SendDateTime' => '',
+            ]);
+        }
         */
 
         $responseApiToken = $user->phone_validation()->create([
