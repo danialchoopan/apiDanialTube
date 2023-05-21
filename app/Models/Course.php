@@ -23,4 +23,10 @@ class Course extends Model
     {
         return $this->belongsTo(SubCourseCategory::class,'category_id');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(CourseComment::class,'course_id');
+    }
+
 }

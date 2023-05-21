@@ -57,4 +57,9 @@ class User extends \TCG\Voyager\Models\User
     {
         return $this->hasMany(CourseTransaction::class);
     }
+
+    public function comments()
+    {
+        return $this->hasMany(CourseComment::class);
+    }
 }

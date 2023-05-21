@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\api\auth\ApiAuthUserController;
+use App\Models\Course;
+use App\Models\CourseComment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -92,6 +94,46 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //end favorites course
 
+    //add user course
+    Route::post('/user/take/course/{course_id}', function (Request $request, $course_id) {
+        $course = \App\Models\Course::find($course_id);
+        $course_price = $course->price;
+
+        if ($course_price == 0) {
+
+            $result=$request->user()->courseTransaction()->create([
+                'course_id' => $course_id,
+                'token' => time() + rand(11, 99) - 7325
+            ]);
+
+            return [
+                'message' => 'شما با موفقیت در این دوره شرکت داده شده اید',
+                'result'=>$result
+            ];
+        }else{
+
+            return [
+                'message' => 'شما به صفحه پرداخت هدایت شده اید ',
+                'course' => $course
+            ];
+        }
+
+    });
+
+    //check if the user taken the course
+    Route::post('/user/check/take/course/{course_id}', function (Request $request, $course_id) {
+        $courseFavorite = $request->user()->courseTransaction()->where('course_id', $course_id)->get();
+        if (count($courseFavorite) != 0) {
+            return [
+                'status' => true,
+            ];
+        } else {
+            return [
+                'status' => false
+            ];
+        }
+    });
+
     //user edit
     Route::post('/user/edit/password/email', function (Request $request) {
 
@@ -116,18 +158,45 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //end user edit
 
     //user rest password
-    Route::post('/user/rest/change/password', [ApiAuthUserController::class,'userRestPasswordChangePassword']);
+    Route::post('/user/rest/change/password', [ApiAuthUserController::class, 'userRestPasswordChangePassword']);
+
+    //course comments
+
+    //show 3-4
+    Route::post('/course/comments/4/{course_id}',function (Request $request,$course_id){
+        return Course::find($course_id)->comments()->with('user')->take(4)->get();
+    });
+
+    //show all
+    Route::post('/course/comments/{course_id}',function (Request $request,$course_id){
+        return Course::find($course_id)->comments()->with('user')->get();
+    });
+
+    //add
+    Route::post('/course/add/comments/{course_id}',function (Request $request,$course_id){
+        $request->user()->comments()->create([
+            'comment'=>$request->comment,
+            'course_id'=>$course_id
+        ]);
+    });
+
+    //delete
+    Route::post('/course/delete/comments/{comment_id}',function (Request $request,$comment_id){
+       CourseComment::destroy($comment_id);
+    });
+
+    //end course comment
 
 });
 
 //no token requests
 
 //user reset request
-Route::post('/user/rest/password', [ApiAuthUserController::class,'userRestPasswordCheckPhone']);
+Route::post('/user/rest/password', [ApiAuthUserController::class, 'userRestPasswordCheckPhone']);
 
-Route::post('/user/rest/password/request/sms', [ApiAuthUserController::class,'userRestPasswordRequestSms']);
+Route::post('/user/rest/password/request/sms', [ApiAuthUserController::class, 'userRestPasswordRequestSms']);
 
-Route::post('/user/rest/password/send/sms',[ApiAuthUserController::class,'userRestPasswordSendSms']);
+Route::post('/user/rest/password/send/sms', [ApiAuthUserController::class, 'userRestPasswordSendSms']);
 //end user reset request
 
 
@@ -162,6 +231,14 @@ Route::get('/homeWithNoAuth', function () {
     $homePage['CoursesWithTeacherMostPopular'] = $CoursesWithTeacherMostPopular;
     $homePage['allCoursesWithVideosPopular'] = $allCoursesWithVideosPopular;
     return $homePage;
+});
+
+//more courses random
+Route::get('/course/more',function (Request $request){
+    $moreCoursesRandom=Course::inRandomOrder()->with( 'user', 'sub_course_categories')
+        ->take(4)
+        ->get();
+    return $moreCoursesRandom;
 });
 
 //show more best-selling
