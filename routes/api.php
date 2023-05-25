@@ -101,16 +101,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
         if ($course_price == 0) {
 
-            $result=$request->user()->courseTransaction()->create([
+            $result = $request->user()->courseTransaction()->create([
                 'course_id' => $course_id,
                 'token' => time() + rand(11, 99) - 7325
             ]);
 
             return [
                 'message' => 'شما با موفقیت در این دوره شرکت داده شده اید',
-                'result'=>$result
+                'result' => $result
             ];
-        }else{
+        } else {
 
             return [
                 'message' => 'شما به صفحه پرداخت هدایت شده اید ',
@@ -162,35 +162,85 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
     //course comments
 
-    //show 3-4
-    Route::post('/course/comments/4/{course_id}',function (Request $request,$course_id){
-        return Course::find($course_id)->comments()->with('user')->take(4)->get();
-    });
 
-    //show all
-    Route::post('/course/comments/{course_id}',function (Request $request,$course_id){
-        return Course::find($course_id)->comments()->with('user')->get();
-    });
 
     //add
-    Route::post('/course/add/comments/{course_id}',function (Request $request,$course_id){
+    Route::post('/course/add/comments/{course_id}', function (Request $request, $course_id) {
         $request->user()->comments()->create([
-            'comment'=>$request->comment,
-            'course_id'=>$course_id
+            'comment' => $request->comment,
+            'course_id' => $course_id
         ]);
     });
 
     //delete
-    Route::post('/course/delete/comments/{comment_id}',function (Request $request,$comment_id){
-       CourseComment::destroy($comment_id);
+    Route::post('/course/delete/comments/{comment_id}', function (Request $request, $comment_id) {
+        CourseComment::destroy($comment_id);
     });
 
     //end course comment
+
+
+    //course transaction
+//    Route::post("take/course",function (Request $request){
+//        $order = \App\Models\Order::where('order_product_id', $request->order_id)->get()->first();
+//        $order->status = $request->status;
+//        $order->save();
+//        if($request->status==10){
+//            $order = \App\Models\Order::where('order_product_id', $request->order_id)->get()->first();
+//            //send user to the payment link
+//            $responseIdPay = Http::withHeaders([
+//                'X-SANDBOX' => 'true',
+//                'Content-Type' => 'application/json',
+//                'X-API-KEY' => env('idPayApiKey')
+//            ])->post('https://api.idpay.ir/v1.1/payment/verify', [
+//                'id' => $order->id_transaction,
+//                'order_id' => $order->order_product_id,
+//            ]);
+//            if ($responseIdPay->successful()) {
+//                if($responseIdPay['status']==101){
+//                    return
+//                        "<h1><center>" .
+//                        "پرداخت شما قبلا تایید شده است"
+//                        . "</center></h1>";
+//                }
+//                if ($responseIdPay['status'] == 100) {
+//                    $orderNew = \App\Models\Order::where('order_product_id', $request->order_id)->get()->first();
+//                    $orderNew->status = 100;
+//                    $orderNew->save();
+//                    return view('api.status',['status' =>true,'order_number'=>$order->order_product_id]);
+//                } else {
+//                    return view('api.status',['status' =>false,'order_number'=>'error']);
+//                }
+//            }else {
+//                return view('api.status',['status' =>false,'order_number'=>'error']);
+//            }
+//        }else {
+//            return view('api.status',['status' =>false,'order_number'=>'error']);
+//        }
+//    });
 
 });
 
 //no token requests
 
+//show 3-4
+Route::post('/course/comments/4/{course_id}', function (Request $request, $course_id) {
+    return Course::find($course_id)->comments()->with('user')->take(4)->get();
+});
+
+//show all
+Route::post('/course/comments/{course_id}', function (Request $request, $course_id) {
+    return Course::find($course_id)->comments()->with('user')->get();
+});
+
+
+//transaction_course
+Route::get('/transaction_course/{course_id}/{user_id}', function (Request $request, $course_id, $user_id) {
+    return [
+        'user' => $user_id,
+        'course' => $course_id
+    ];
+});
 //user reset request
 Route::post('/user/rest/password', [ApiAuthUserController::class, 'userRestPasswordCheckPhone']);
 
@@ -234,8 +284,8 @@ Route::get('/homeWithNoAuth', function () {
 });
 
 //more courses random
-Route::get('/course/more',function (Request $request){
-    $moreCoursesRandom=Course::inRandomOrder()->with( 'user', 'sub_course_categories')
+Route::get('/course/more', function (Request $request) {
+    $moreCoursesRandom = Course::inRandomOrder()->with('user', 'sub_course_categories')
         ->take(4)
         ->get();
     return $moreCoursesRandom;
