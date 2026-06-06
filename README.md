@@ -18,6 +18,17 @@
 - **نمودارها:** [Chart.js](https://www.chartjs.org/) برای آنالیزهای پیشرفته
 - **احراز هویت:** Laravel Sanctum (مبتنی بر توکن برای اپلیکیشن اندروید)
 
+## 🖼️ اسکرین‌شات‌ها
+
+### صفحه اصلی پلتفرم وب
+![Web Platform Homepage](img/homepage.png)
+
+### صفحه پخش ویدیو سفارشی
+![Custom Video Player Page](img/course_player.png)
+
+### داشبورد پنل مدیریت
+![Admin Panel Dashboard](img/admin_dashboard.png)
+
 ## 🛠️ راهنمای نصب و راه‌اندازی
 
 برای اجرای پروژه به صورت محلی، مراحل زیر را دنبال کنید:
@@ -61,17 +72,6 @@ php artisan serve
 - **بازنویسی داخلی:** کنترلرها بازنویسی شده و کوئری‌ها برای عملکرد بهتر بهینه شده‌اند، اما ساختار پاسخ‌های JSON برای حفظ سازگاری یکسان باقی مانده است.
 - **هشدار:** از تغییر نام، حذف یا اصلاح کلیدهای API یا ساختارهای پاسخ موجود خودداری کنید، زیرا باعث اختلال در اتصال اپلیکیشن موبایل خواهد شد.
 
-## 🖼️ اسکرین‌شات‌ها
-
-### صفحه اصلی پلتفرم وب
-![Web Platform Homepage](img/homepage.png)
-
-### صفحه پخش ویدیو سفارشی
-![Custom Video Player Page](img/course_player.png)
-
-### داشبورد پنل مدیریت
-![Admin Panel Dashboard](img/admin_dashboard.png)
-
 ## 📄 لایسنس
 
 پروژه danialtub یک نرم‌افزار متن‌باز است که تحت [لایسنس MIT](https://opensource.org/licenses/MIT) منتشر شده است.
@@ -97,6 +97,18 @@ The project follows a modern, clean code architecture to ensure scalability and 
 - **Typography:** [Vazirmatn](https://github.com/rastikerdar/vazirmatn) Persian font
 - **Charts:** [Chart.js](https://www.chartjs.org/) for advanced analytics
 - **Authentication:** Laravel Sanctum (Token-based for Android App)
+
+
+## 🖼️ Screenshots
+
+### Web Platform Homepage
+![Web Platform Homepage](img/homepage.png)
+
+### Custom Video Player Page
+![Custom Video Player Page](img/course_player.png)
+
+### Admin Panel Dashboard
+![Admin Panel Dashboard](img/admin_dashboard.png)
 
 ## 🛠️ Setup & Installation Guide
 
@@ -141,16 +153,6 @@ php artisan serve
 - **Internal Refactoring:** The controllers have been refactored and queries optimized for performance, but the JSON response structures remain identical to preserve compatibility.
 - **Warning:** Do not modify, rename, or delete existing API keys or response structures, as it will break the mobile application integration.
 
-## 🖼️ Screenshots
-
-### Web Platform Homepage
-![Web Platform Homepage](img/homepage.png)
-
-### Custom Video Player Page
-![Custom Video Player Page](img/course_player.png)
-
-### Admin Panel Dashboard
-![Admin Panel Dashboard](img/admin_dashboard.png)
 
 ## 📄 License
 
