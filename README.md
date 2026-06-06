@@ -1,5 +1,85 @@
 # danialtub
 
+**danialtub** یک اکوسیستم قدرتمند برای اشتراک‌گذاری ویدیو و پلتفرم آموزشی است که برای عملکرد بالا و تجربه‌ کاربری مدرن طراحی شده است. این پروژه به عنوان یک راهکار جامع شامل یک API هدلس لاراول برای اپلیکیشن‌های موبایل، یک رابط کاربری وب کامل برای دانشجویان، و یک داشبورد مدیریتی پیشرفته برای مدرسان و مدیران عمل می‌کند.
+
+<p align="center">
+  <img src="img/danialtub.png" width="200" alt="danialtub Logo">
+</p>
+
+## 🚀 معماری و تکنولوژی‌های مورد استفاده
+
+این پروژه از یک معماری کدنویسی مدرن و تمیز پیروی می‌کند تا قابلیت مقیاس‌پذیری و نگهداری را تضمین کند.
+
+- **بک‌اند:** [Laravel 8](https://laravel.com/) (Headless API + Blade Views)
+- **پایگاه داده:** SQLite (محلی) / MySQL (عملیاتی)
+- **پنل مدیریت:** [TCG Voyager](https://voyager-docs.dev/) (مدرن‌سازی شده با Tailwind CSS)
+- **CSS فرانت‌اند:** [Tailwind CSS](https://tailwindcss.com/) با پشتیبانی از RTL
+- **تایپوگرافی:** فونت فارسی [وزیرمتن](https://github.com/rastikerdar/vazirmatn)
+- **نمودارها:** [Chart.js](https://www.chartjs.org/) برای آنالیزهای پیشرفته
+- **احراز هویت:** Laravel Sanctum (مبتنی بر توکن برای اپلیکیشن اندروید)
+
+## 🛠️ راهنمای نصب و راه‌اندازی
+
+برای اجرای پروژه به صورت محلی، مراحل زیر را دنبال کنید:
+
+### ۱. کلون کردن مخزن و نصب وابستگی‌های PHP
+```bash
+composer install
+```
+
+### ۲. نصب وابستگی‌های فرانت‌اند و بیلد کردن دارایی‌ها
+```bash
+npm install
+npm run dev
+```
+
+### ۳. پیکربندی محیط (Environment)
+فایل نمونه محیط را کپی کرده و کلید اپلیکیشن را تولید کنید:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+*نکته: اطمینان حاصل کنید که `DB_CONNECTION` روی `sqlite` تنظیم شده و `DB_DATABASE` به مسیر مطلق فایل SQLite شما اشاره می‌کند.*
+
+### ۴. راه‌اندازی و سیدینگ پایگاه داده
+پایگاه داده را ایجاد کنید، مهاجرت‌ها (migrations) را اجرا کنید و داده‌های واقعی فارسی را وارد کنید:
+```bash
+touch database/database.sqlite
+php artisan migrate --force
+php artisan db:seed --class=RealisticDataSeeder
+```
+
+### ۵. اجرای اپلیکیشن
+```bash
+php artisan serve
+```
+
+## 📱 مستندات API موبایل (اندروید)
+
+**بسیار مهم:** نقاط انتهایی (endpoints) API که در `routes/api.php` قرار دارند، منحصراً برای **اپلیکیشن اندروید danialtub** رزرو شده‌اند.
+
+- **بازنویسی داخلی:** کنترلرها بازنویسی شده و کوئری‌ها برای عملکرد بهتر بهینه شده‌اند، اما ساختار پاسخ‌های JSON برای حفظ سازگاری یکسان باقی مانده است.
+- **هشدار:** از تغییر نام، حذف یا اصلاح کلیدهای API یا ساختارهای پاسخ موجود خودداری کنید، زیرا باعث اختلال در اتصال اپلیکیشن موبایل خواهد شد.
+
+## 🖼️ اسکرین‌شات‌ها
+
+### صفحه اصلی پلتفرم وب
+![Web Platform Homepage](img/homepage.png)
+
+### صفحه پخش ویدیو سفارشی
+![Custom Video Player Page](img/course_player.png)
+
+### داشبورد پنل مدیریت
+![Admin Panel Dashboard](img/admin_dashboard.png)
+
+## 📄 لایسنس
+
+پروژه danialtub یک نرم‌افزار متن‌باز است که تحت [لایسنس MIT](https://opensource.org/licenses/MIT) منتشر شده است.
+
+---
+
+# danialtub
+
 **danialtub** is a robust video-sharing and educational platform ecosystem designed for high performance and modern user experiences. It serves as a comprehensive solution featuring a headless Laravel API for mobile applications, a complete Web UI for students, and an advanced management dashboard for creators and administrators.
 
 <p align="center">
