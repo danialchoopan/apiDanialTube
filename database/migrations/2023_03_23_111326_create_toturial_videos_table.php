@@ -24,7 +24,7 @@ class CreateToturialVideosTable extends Migration
             $table->timestamps();
 
 
-            $table->foreign('course_id')->references('id')->on('course_categories')->onDelete('cascade');
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
 
         });
     }
