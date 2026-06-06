@@ -44,138 +44,27 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     //end user phone verify requests
 
     //user profile courses
+    Route::post('/user/profile/course/favorites', [UserController::class, 'favorites']);
+    Route::post('/user/profile/course/transaction', [UserController::class, 'transactions']);
 
-    Route::post('/user/profile/course/favorites', function (Request $request) {
-        $courseFavorites = $request->user()->courseFavourite()
-            ->with("user", "course", "course.videos", "course.user", "course.sub_course_categories")->get();
+    //favorites course
+    Route::post('/user/check/course/favorite/{course_id}', [UserController::class, 'checkFavorite']);
+    Route::post('/user/add/course/favorite/{course_id}', [UserController::class, 'addFavorite']);
+    Route::post('/user/remove/course/favorite/{course_id}', [UserController::class, 'removeFavorite']);
 
-        return $courseFavorites;
-    });
-
-    Route::post('/user/profile/course/transaction', function (Request $request) {
-        $courseTransaction = $request->user()->courseTransaction()
-            ->with("user", "course", "course.videos", "course.user", "course.sub_course_categories")->get();
-        return $courseTransaction;
-    });
-
-    //end user profile courses
-
-    //check if the course is favorite
-    Route::post('/user/check/course/favorite/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = $request->user()->courseFavourite()->where('course_id', $course_id)->get();
-        if (count($courseFavorite) != 0) {
-            return [
-                'status' => true,
-            ];
-        } else {
-            return [
-                'status' => false
-            ];
-        }
-    });
-
-    //add favorite course
-
-    Route::post('/user/add/course/favorite/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = $request->user()->courseFavourite()->create([
-            'course_id' => $course_id,
-            'token' => time() + rand(11, 99) - 7325
-        ]);
-        return $courseFavorite;
-    });
-
-    //remove favorite course
-
-    Route::post('/user/remove/course/favorite/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = $request->user()->courseFavourite()->where('course_id', $course_id)->delete();
-        return $courseFavorite;
-    });
-
-
-    //end favorites course
-
-    //add user course
-    Route::post('/user/take/course/{course_id}', function (Request $request, $course_id) {
-        $course = \App\Models\Course::find($course_id);
-        $course_price = $course->price;
-
-        if ($course_price == 0) {
-
-            $result = $request->user()->courseTransaction()->create([
-                'course_id' => $course_id,
-                'token' => time() + rand(11, 99) - 7325
-            ]);
-
-            return [
-                'message' => 'شما با موفقیت در این دوره شرکت داده شده اید',
-                'result' => $result
-            ];
-        } else {
-
-            return [
-                'message' => 'شما به صفحه پرداخت هدایت شده اید ',
-                'course' => $course
-            ];
-        }
-
-    });
-
-    //check if the user taken the course
-    Route::post('/user/check/take/course/{course_id}', function (Request $request, $course_id) {
-        $courseFavorite = $request->user()->courseTransaction()->where('course_id', $course_id)->get();
-        if (count($courseFavorite) != 0) {
-            return [
-                'status' => true,
-            ];
-        } else {
-            return [
-                'status' => false
-            ];
-        }
-    });
+    //take course
+    Route::post('/user/take/course/{course_id}', [UserController::class, 'takeCourse']);
+    Route::post('/user/check/take/course/{course_id}', [UserController::class, 'checkTakeCourse']);
 
     //user edit
-    Route::post('/user/edit/password/email', function (Request $request) {
-
-        $user = User::find($request->user()->id);
-        if ($user->password == Hash::check($request->oldPassword, $user->password)) {
-            if ($request->email != "") {
-                $user->email = $request->email;
-            }
-            if ($request->name != "") {
-                $user->name = $request->m_name;
-            }
-            $user->password = Hash::make($request->newPassword);
-            $user->save();
-            return $user;
-        } else {
-            return [
-                'message' => "رمزعبور فعلی اشتباه است!"
-            ];
-        }
-
-    });
-    //end user edit
+    Route::post('/user/edit/password/email', [UserController::class, 'editProfile']);
 
     //user rest password
     Route::post('/user/rest/change/password', [ApiAuthUserController::class, 'userRestPasswordChangePassword']);
 
     //course comments
-
-
-
-    //add
-    Route::post('/course/add/comments/{course_id}', function (Request $request, $course_id) {
-        $request->user()->comments()->create([
-            'comment' => $request->comment,
-            'course_id' => $course_id
-        ]);
-    });
-
-    //delete
-    Route::post('/course/delete/comments/{comment_id}', function (Request $request, $comment_id) {
-        CourseComment::destroy($comment_id);
-    });
+    Route::post('/course/add/comments/{course_id}', [CommentController::class, 'store']);
+    Route::post('/course/delete/comments/{comment_id}', [CommentController::class, 'destroy']);
 
     //end course comment
 
@@ -222,16 +111,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 });
 
 //no token requests
-
-//show 3-4
-Route::post('/course/comments/4/{course_id}', function (Request $request, $course_id) {
-    return Course::find($course_id)->comments()->with('user')->take(4)->get();
-});
-
-//show all
-Route::post('/course/comments/{course_id}', function (Request $request, $course_id) {
-    return Course::find($course_id)->comments()->with('user')->get();
-});
+Route::post('/course/comments/4/{course_id}', [CommentController::class, 'showLimited']);
+Route::post('/course/comments/{course_id}', [CommentController::class, 'show']);
 
 
 //transaction_course
@@ -253,150 +134,26 @@ Route::post('/user/rest/password/send/sms', [ApiAuthUserController::class, 'user
 Route::post('/auth/register', [ApiAuthUserController::class, 'createUser']);
 Route::post('/auth/login', [ApiAuthUserController::class, 'loginUser']);
 
+use App\Http\Controllers\api\CourseController;
+use App\Http\Controllers\api\CategoryController;
+use App\Http\Controllers\api\UserController;
+use App\Http\Controllers\api\CommentController;
+
 //home page
-
-//all
-Route::get('/homeWithNoAuth', function () {
-    $homePage = [];
-    $homePageSlider = \App\Models\Slider::all();
-    $coursesCategory = \App\Models\CourseCategory::all();
-
-    $allCoursesWithTeacherBestSelling =
-        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
-            ->take(4)
-            ->get();
-
-    $CoursesWithTeacherMostPopular =
-        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
-            ->first();
-
-    $allCoursesWithVideosPopular =
-        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
-            ->take(4)
-            ->get();
-
-    $homePage['homePageSlider'] = $homePageSlider;
-    $homePage['coursesCategory'] = $coursesCategory;
-    $homePage['allCoursesWithTeacherBestSelling'] = $allCoursesWithTeacherBestSelling;
-    $homePage['CoursesWithTeacherMostPopular'] = $CoursesWithTeacherMostPopular;
-    $homePage['allCoursesWithVideosPopular'] = $allCoursesWithVideosPopular;
-    return $homePage;
-});
-
-//more courses random
-Route::get('/course/more', function (Request $request) {
-    $moreCoursesRandom = Course::inRandomOrder()->with('user', 'sub_course_categories')
-        ->take(4)
-        ->get();
-    return $moreCoursesRandom;
-});
-
-//show more best-selling
-Route::get('/homeWithNoAuth/showMoreBestselling', function () {
-    $allCoursesWithTeacherBestSelling = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
-    return $allCoursesWithTeacherBestSelling;
-});
-
-//show more most-populars
-Route::get('/homeWithNoAuth/showMoreMostPopulars', function () {
-    $allCoursesWithVideosPopular = \App\Models\Course::with('videos', 'user', 'sub_course_categories')->get();
-    return $allCoursesWithVideosPopular;
-});
-
-//show related
-Route::get('/courses/more', function () {
-    $coursesMore =
-        \App\Models\Course::with('videos', 'user', 'sub_course_categories')
-            ->take(4)
-            ->get();
-    return $coursesMore;
-});
-
-//end home page
-
+Route::get('/homeWithNoAuth', [CourseController::class, 'homeWithNoAuth']);
+Route::get('/course/more', [CourseController::class, 'more']);
+Route::get('/homeWithNoAuth/showMoreBestselling', [CourseController::class, 'showMoreBestselling']);
+Route::get('/homeWithNoAuth/showMoreMostPopulars', [CourseController::class, 'showMoreMostPopulars']);
+Route::get('/courses/more', [CourseController::class, 'moreRelated']);
 
 //course
-
-Route::get('/course/show/{id}', function (Request $request, $id) {
-    $courseShow = \App\Models\Course::with('videos', 'user')->find($id);
-    if ($courseShow) {
-        return [
-            'success' => true,
-            'courseWithVideosUser' => $courseShow
-        ];
-    } else {
-        return [
-            'success' => false
-        ];
-    }
-});
-
-Route::get('/course/search/{courseName}', function (Request $request, $courseName) {
-    $courses = \App\Models\Course::where('name_title', 'LIKE', "%$courseName%")
-        ->with('videos', 'user', 'sub_course_categories')
-        ->get();
-
-    if ($courses) {
-        return [
-            'success' => true,
-            'courseWithVideosUserSearch' => $courses
-        ];
-    } else {
-        return [
-            'success' => false
-        ];
-    }
-});
-
-
-//end course
-
+Route::get('/course/show/{id}', [CourseController::class, 'show']);
+Route::get('/course/search/{courseName}', [CourseController::class, 'search']);
 
 //category
-Route::get('/course/categories', function (Request $request) {
-    $categoris = \App\Models\CourseCategory::all();
-    if ($categoris) {
-        return [
-            'courseCategories' => $categoris
-        ];
-    } else {
-        return [
-            'success' => false
-        ];
-    }
-});
-
-
-Route::get('/course/sub/categories/{category_id}', function (Request $request, $category_id) {
-    $categoris = \App\Models\CourseCategory::find($category_id)->subCategory()->get();
-
-    if ($categoris) {
-        return [
-            'subCourseCategories' => $categoris
-        ];
-    } else {
-        return [
-            'success' => false
-        ];
-    }
-});
-
-Route::get('/course/sub/category/courses/{sub_category_id}', function (Request $request, $sub_category_id) {
-    $subCategoryCourses = \App\Models\SubCourseCategory::find($sub_category_id)->courses()
-        ->with('videos', 'user', 'sub_course_categories')
-        ->get();
-
-    if ($subCategoryCourses) {
-        return [
-            'subCourseCategoriesCourses' => $subCategoryCourses
-        ];
-    } else {
-        return [
-            'success' => false
-        ];
-    }
-});
-//end category
+Route::get('/course/categories', [CategoryController::class, 'index']);
+Route::get('/course/sub/categories/{category_id}', [CategoryController::class, 'subCategories']);
+Route::get('/course/sub/category/courses/{sub_category_id}', [CategoryController::class, 'subCategoryCourses']);
 
 
 
