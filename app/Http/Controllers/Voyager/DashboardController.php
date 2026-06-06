@@ -23,9 +23,12 @@ class DashboardController extends Controller
         // Mocking watch time as we don't have it in DB, but let's base it on views
         $totalWatchTime = $totalViews * 10 / 60; // Assume 10 mins avg per view
 
+        $driver = DB::getDriverName();
+        $monthFormat = $driver == 'sqlite' ? "strftime('%m', course_transactions.created_at)" : "DATE_FORMAT(course_transactions.created_at, '%m')";
+
         $monthlySales = CourseTransaction::select(
             DB::raw('sum(courses.price) as total'),
-            DB::raw("strftime('%m', course_transactions.created_at) as month")
+            DB::raw("$monthFormat as month")
         )
         ->join('courses', 'course_transactions.course_id', '=', 'courses.id')
         ->groupBy('month')
