@@ -154,6 +154,6 @@ php artisan serve
 - **Warning:** Do not modify, rename, or delete existing API keys or response structures, as it will break the mobile application integration.
 
 
-## 📄 License
+## License
 
 The danialtub project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
